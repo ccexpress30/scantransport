@@ -1,15 +1,15 @@
 <!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-<meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<meta name="apple-mobile-web-app-title" content="ScanTransport"/>
-<meta name="theme-color" content="#0f172a"/>
-<link rel="manifest" href="manifest.json"/>
+<html lang="fr"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ScanTransport">
+<meta name="theme-color" content="#0f172a">
+<link rel="manifest" href="file:///Users/fredericparis/Downloads/manifest.json">
 <title>ScanTransport</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link href="index_files/css2.css" rel="stylesheet">
 <style>
 :root {
   --bg: #0f172a;
@@ -269,12 +269,12 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
     <div class="field">
       <label>Employé</label>
       <select id="login-user">
-        <option value="">Sélectionner...</option>
+        <option value="" selected="selected">Sélectionner...</option>
       </select>
     </div>
     <div class="field">
       <label>Code PIN (4 chiffres)</label>
-      <input type="password" id="login-pin" maxlength="4" inputmode="numeric" pattern="[0-9]*" placeholder="••••"/>
+      <input type="password" id="login-pin" maxlength="4" inputmode="numeric" pattern="[0-9]*" placeholder="••••">
     </div>
     <button class="btn-login" onclick="doLogin()">Connexion</button>
     <div class="login-error" id="login-err">Identifiants incorrects</div>
@@ -295,12 +295,13 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
     <button class="tab active" onclick="switchTab('scan',this)">Scanner</button>
     <button class="tab" onclick="switchTab('history',this)">Historique</button>
     <button class="tab" onclick="switchTab('report',this)">Rapport</button>
+    <button class="tab" id="tab-btn-manager" style="display:none;color:#fbbf24;" onclick="switchTab('manager',this)">★ Manager</button>
   </div>
 
   <!-- SCAN -->
   <div id="tab-scan" class="tab-content active">
     <div class="cam-box" id="cam-box">
-      <video id="video" autoplay playsinline muted></video>
+      <video id="video" autoplay="autoplay" playsinline="" muted="muted"></video>
       <div class="cam-overlay">
         <div class="cam-frame"><div class="scan-beam"></div></div>
       </div>
@@ -318,7 +319,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
     </div>
 
     <div class="manual-row">
-      <input type="text" id="manual" placeholder="Saisie manuelle ou lecteur USB..." inputmode="text"/>
+      <input type="text" id="manual" placeholder="Saisie manuelle ou lecteur USB..." inputmode="text">
       <button class="btn-validate" onclick="manualScan()">OK</button>
     </div>
 
@@ -362,30 +363,53 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
     <button class="btn-export" onclick="exportCSV()">⬇ Exporter Excel (.csv)</button>
     <button class="btn-sync" onclick="forceSyncAll()">↑ Synchroniser tout avec Sheets</button>
   </div>
+  <!-- MANAGER -->
+  <div id="tab-manager" class="tab-content">
+    <div style="margin-bottom:1rem;">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:var(--amber);margin-bottom:8px;">Vue manager — confidentiel</div>
+    </div>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-val v-total" id="m-total">0</div><div class="stat-lbl">Total</div></div>
+      <div class="stat-card"><div class="stat-val v-livre" id="m-livre">0</div><div class="stat-lbl">Livrés</div></div>
+      <div class="stat-card"><div class="stat-val v-exp" id="m-exp">0</div><div class="stat-lbl">Expédiés</div></div>
+      <div class="stat-card"><div class="stat-val v-transit" id="m-transit">0</div><div class="stat-lbl">En transit</div></div>
+    </div>
+    <div class="by-user" style="margin-bottom:1rem;">
+      <div class="by-user-title">Par employé (aujourd'hui)</div>
+      <div id="m-byuser"></div>
+    </div>
+    <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:8px;">Tous les scans (avec noms)</div>
+    <div id="m-allscans"></div>
+    <div style="height:1rem;"></div>
+    <button class="btn-export" onclick="exportCSVManager()">⬇ Export complet (avec noms)</button>
+  </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+<script src="index_files/quagga.min.js"></script>
 <script>
 // ============================================================
 // CONFIG — À MODIFIER
 // ============================================================
-const GOOGLE_SCRIPT_URL = "VOTRE_URL_APPS_SCRIPT_ICI";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw2xeMU3BF_nh-RZMocv0m2-hJAEjCghJ1PMzS3H4bR1sY1VHFGFuIr8x_TIHWwz3y6/exec";
 
 const USERS = {
-  "Jean Martin":      "1234",
-  "Sophie Durand":    "2222",
-  "Marc Leroy":       "3333",
-  "Isabelle Petit":   "4444",
-  "Thomas Bernard":   "5555",
-  "Claire Moreau":    "6666",
-  "Nicolas Lambert":  "7777",
-  "Lucie Simon":      "8888",
-  "Antoine Dubois":   "9999",
-  "Emma Rousseau":    "0000"
+  "ANDRE Cédric":         "0693",
+  "BRAJON Daniel":        "0665",
+  "BRIN Jason":           "0396",
+  "DJAHNIT Cindy":        "0195",
+  "GARROUCHZ Nassim":     "0495",
+  "HENOUX Dominique":     "0258",
+  "MALAVIEILLE Steve":    "1188",
+  "PARIS Frédéric":       "2603",
+  "SERRE Thibault":       "0687",
+  "INVIT":                "9999"
 };
+const MANAGER_PIN = "2603";
+const MANAGER_USER = "PARIS Frédéric";
 // ============================================================
 
 let currentUser = "";
+let isManager = false;
 let scans = JSON.parse(localStorage.getItem('scans') || '[]');
 let sessionCount = 0;
 let currentStatus = "Expédié";
@@ -410,10 +434,12 @@ function doLogin() {
   const pin = document.getElementById('login-pin').value;
   if (USERS[user] && USERS[user] === pin) {
     currentUser = user;
+    isManager = (user === MANAGER_USER && pin === MANAGER_PIN);
     sessionCount = 0;
-    document.getElementById('topbar-name').textContent = user.split(' ')[0];
+    document.getElementById('topbar-name').textContent = user.split(' ')[0] + (isManager ? ' ★' : '');
     document.getElementById('login-err').style.display = 'none';
     document.getElementById('login-pin').value = '';
+    document.getElementById('tab-btn-manager').style.display = isManager ? 'block' : 'none';
     updateCounters();
     show('s-main');
     switchTab('scan', document.querySelector('.tab'));
@@ -438,6 +464,7 @@ function switchTab(name, btn) {
   btn.classList.add('active');
   if (name === 'history') renderHistory();
   if (name === 'report') renderReport();
+  if (name === 'manager') renderManager();
 }
 
 function setStatus(s) {
@@ -591,6 +618,43 @@ function renderReport() {
     .join('') || '<div class="empty">Aucun scan aujourd\'hui.</div>';
 }
 
+function renderManager() {
+  const today = new Date().toLocaleDateString('fr-FR');
+  const todayScans = scans.filter(s => s.date === today);
+  document.getElementById('m-total').textContent = todayScans.length;
+  document.getElementById('m-exp').textContent = todayScans.filter(s => s.status === 'Expédié').length;
+  document.getElementById('m-transit').textContent = todayScans.filter(s => s.status === 'En transit').length;
+  document.getElementById('m-livre').textContent = todayScans.filter(s => s.status === 'Livré').length;
+  const byUser = {};
+  todayScans.forEach(s => { byUser[s.user] = (byUser[s.user] || 0) + 1; });
+  document.getElementById('m-byuser').innerHTML = Object.entries(byUser)
+    .sort((a,b) => b[1]-a[1])
+    .map(([u,c]) => `<div class="user-row"><span>${u}</span><span class="user-count">${c}</span></div>`)
+    .join('') || '<div class="empty">Aucun scan aujourd'hui.</div>';
+  document.getElementById('m-allscans').innerHTML = [...scans].reverse().map(s => {
+    const bc = s.status === 'Expédié' ? 'b-exp' : s.status === 'En transit' ? 'b-transit' : 'b-livre';
+    return `<div class="scan-item">
+      <div>
+        <div class="scan-item-code">${s.code}</div>
+        <div class="scan-item-meta">${s.user} · ${s.date} ${s.time}</div>
+      </div>
+      <span class="badge ${bc}">${s.status}</span>
+    </div>`;
+  }).join('') || '<div class="empty">Aucun scan.</div>';
+}
+
+function exportCSVManager() {
+  if (!scans.length) { alert('Aucun scan à exporter.'); return; }
+  const header = 'Code;Statut;Employé;Date;Heure
+';
+  const rows = scans.map(s => `${s.code};${s.status};${s.user};${s.date};${s.time}`).join('
+');
+  const blob = new Blob(['﻿' + header + rows], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'scans_manager_complet.csv'; a.click();
+  URL.revokeObjectURL(url);
+}
+
 function exportCSV() {
   if (!scans.length) { alert('Aucun scan à exporter.'); return; }
   const header = 'Code;Statut;Employé;Date;Heure\n';
@@ -601,5 +665,6 @@ function exportCSV() {
   URL.revokeObjectURL(url);
 }
 </script>
-</body>
-</html>
+
+
+</body></html>
