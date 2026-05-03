@@ -234,21 +234,17 @@ function stopCamera(){
 }
 let lastScannedCode='',lastScannedTime=0;
 function startBarcodeScanning(){
-  if(!('BarcodeDetector' in window)){setSyncMsg('Utilisez la saisie manuelle sur cet appareil','sync-err');return;}
-  const detector=new BarcodeDetector({formats:['code_128','code_39','ean_13','ean_8','qr_code']});
   const video=document.getElementById('video');
-  scanInterval=setInterval(async()=>{
-    if(video.readyState===video.HAVE_ENOUGH_DATA){
-      try{
-        const barcodes=await detector.detect(video);
-        if(barcodes.length>0){
-          const code=barcodes[0].rawValue;
-          const now=Date.now();
-          if(code!==lastScannedCode||now-lastScannedTime>2000){lastScannedCode=code;lastScannedTime=now;addScan(code);}
-        }
-      }catch(e){}
+  const codeReader=new ZXing.BrowserMultiFormatReader();
+  codeReader.decodeFromVideoElement(video,(result,err)=>{
+    if(result){
+      const code=result.getText();
+      const now=Date.now();
+      if(code!==lastScannedCode||now-lastScannedTime>2000){
+        lastScannedCode=code;lastScannedTime=now;addScan(code);
+      }
     }
-  },300);
+  });
 }
 async function sendToSheets(scan){
   if(!GOOGLE_SCRIPT_URL)return;setSyncMsg('Envoi...','');
